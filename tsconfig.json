@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "jsx": "react",
+    "plugins": [{ "name": "typescript-plugin-css-modules" }],
+    "files": ["./node_modules/wmr/types.d.ts"]
+  }
+}

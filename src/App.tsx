@@ -1,6 +1,6 @@
 import React, { useReducer } from 'react';
 import DigitButton from './DigitButton';
-import styles, { currentOperand } from './App.module.css';
+import styles, { currentOperand, previousOperand } from './App.module.css';
 import OperationButton from './OperationButton';
 
 export enum ACTIONTYPES {
@@ -73,6 +73,19 @@ function reducer(
         previousOperand: evaluate(state),
         currentOperand: null,
         operation: payload.operation,
+      };
+    case ACTIONTYPES.EVALUATE:
+      if (
+        state.currentOperand === null ||
+        state.previousOperand === null ||
+        state.operation === null
+      )
+        return state;
+      return {
+        ...state,
+        previousOperand: null,
+        operation: null,
+        currentOperand: evaluate(state),
       };
     default:
       break;
@@ -153,7 +166,14 @@ function App() {
       <OperationButton operation={OPERATIONS.MINUS} dispatch={dispatch} />
       <DigitButton digit={'.'} dispatch={dispatch} />
       <DigitButton digit={'0'} dispatch={dispatch} />
-      <button className={styles.spanTwo}>=</button>
+      <button
+        onClick={() => {
+          dispatch({ actionType: ACTIONTYPES.EVALUATE });
+        }}
+        className={styles.spanTwo}
+      >
+        =
+      </button>
     </div>
   );
 }

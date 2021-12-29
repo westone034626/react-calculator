@@ -1,6 +1,6 @@
 import React, { useReducer } from 'react';
 import DigitButton from './DigitButton';
-import styles, { currentOperand, previousOperand } from './App.module.css';
+import styles from './App.module.css';
 import OperationButton from './OperationButton';
 
 export enum ACTIONTYPES {

@@ -22,6 +22,7 @@ interface CalculatorProps {
   currentOperand: string;
   previousOperand: string;
   operation: OPERATIONS;
+  overwrite: boolean;
 }
 
 export type PayloadProps =
@@ -45,6 +46,9 @@ function reducer(
 ): CalculatorProps {
   switch (actionType) {
     case ACTIONTYPES.ADD_DIGIT:
+      if (state.overwrite)
+        return { ...state, overwrite: false, currentOperand: payload.digit };
+
       if (payload.digit === '0' && state.currentOperand === '0') return state;
       if (payload.digit === '.' && state.currentOperand.includes('.'))
         return state;
@@ -53,7 +57,12 @@ function reducer(
         currentOperand: `${state.currentOperand || ''}${payload.digit}`,
       };
     case ACTIONTYPES.CLEAR:
-      return { currentOperand: null, previousOperand: null, operation: null };
+      return {
+        currentOperand: null,
+        previousOperand: null,
+        operation: null,
+        overwrite: false,
+      };
     case ACTIONTYPES.CHOOSE_OPERATION:
       if (state.currentOperand === null && state.previousOperand === null)
         return state;
@@ -86,9 +95,17 @@ function reducer(
         previousOperand: null,
         operation: null,
         currentOperand: evaluate(state),
+        overwrite: true,
       };
     default:
       break;
+    case ACTIONTYPES.DELETE_DIGIT:
+      if (state.overwrite)
+        return { ...state, overwrite: false, currentOperand: null };
+      if (state.currentOperand === null) return state;
+      if (state.currentOperand.length === 1)
+        return { ...state, currentOperand: null };
+      return { ...state, currentOperand: state.currentOperand.slice(0, -1) };
   }
 }
 
@@ -132,7 +149,12 @@ function formatOperand(operand: string) {
 function App() {
   const [{ currentOperand, previousOperand, operation }, dispatch] = useReducer(
     reducer,
-    { currentOperand: null, previousOperand: null, operation: null }
+    {
+      currentOperand: null,
+      previousOperand: null,
+      operation: null,
+      overwrite: false,
+    }
   );
   return (
     <div className={styles.gridContainer}>
@@ -150,7 +172,13 @@ function App() {
       >
         AC
       </button>
-      <button>DEL</button>
+      <button
+        onClick={() => {
+          dispatch({ actionType: ACTIONTYPES.DELETE_DIGIT });
+        }}
+      >
+        DEL
+      </button>
       <OperationButton operation={OPERATIONS.DEVIDE} dispatch={dispatch} />
       <DigitButton digit={'1'} dispatch={dispatch} />
       <DigitButton digit={'2'} dispatch={dispatch} />

@@ -35,7 +35,7 @@ export type PayloadProps =
 
 export interface CalculatorActionProps {
   actionType: ACTIONTYPES;
-  payload: PayloadProps;
+  payload?: PayloadProps;
 }
 
 function reducer(
@@ -44,11 +44,15 @@ function reducer(
 ): CalculatorProps {
   switch (actionType) {
     case ACTIONTYPES.ADD_DIGIT:
+      if (payload.digit === '0' && state.currentOperand === '0') return state;
+      if (payload.digit === '.' && state.currentOperand.includes('.'))
+        return state;
       return {
         ...state,
         currentOperand: `${state.currentOperand || ''}${payload.digit}`,
       };
-
+    case ACTIONTYPES.CLEAR:
+      return { currentOperand: null, previousOperand: null, operation: null };
     default:
       break;
   }
@@ -67,7 +71,12 @@ function App() {
         </div>
         <div className={styles.currentOperand}>{currentOperand}</div>
       </div>
-      <button className={styles.spanTwo}>AC</button>
+      <button
+        onClick={() => dispatch({ actionType: ACTIONTYPES.CLEAR })}
+        className={styles.spanTwo}
+      >
+        AC
+      </button>
       <button>DEL</button>
       <button>÷</button>
       <DigitButton digit={'1'} dispatch={dispatch} />
@@ -82,7 +91,7 @@ function App() {
       <DigitButton digit={'8'} dispatch={dispatch} />
       <DigitButton digit={'9'} dispatch={dispatch} />
       <button>-</button>
-      <button>.</button>
+      <DigitButton digit={'.'} dispatch={dispatch} />
       <DigitButton digit={'0'} dispatch={dispatch} />
       <button className={styles.spanTwo}>=</button>
     </div>

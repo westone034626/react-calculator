@@ -1,6 +1,7 @@
 import React, { useReducer } from 'react';
 import DigitButton from './DigitButton';
 import styles, { currentOperand } from './App.module.css';
+import OperationButton from './OperationButton';
 
 export enum ACTIONTYPES {
   ADD_DIGIT = 'add-digit',
@@ -53,9 +54,66 @@ function reducer(
       };
     case ACTIONTYPES.CLEAR:
       return { currentOperand: null, previousOperand: null, operation: null };
+    case ACTIONTYPES.CHOOSE_OPERATION:
+      if (state.currentOperand === null && state.previousOperand === null)
+        return state;
+      if (state.currentOperand === null) {
+        return { ...state, operation: payload.operation };
+      }
+      if (state.previousOperand === null) {
+        return {
+          ...state,
+          previousOperand: state.currentOperand,
+          currentOperand: null,
+          operation: payload.operation,
+        };
+      }
+      return {
+        ...state,
+        previousOperand: evaluate(state),
+        currentOperand: null,
+        operation: payload.operation,
+      };
     default:
       break;
   }
+}
+
+function evaluate({
+  currentOperand,
+  previousOperand,
+  operation,
+}: CalculatorProps) {
+  const prev = parseFloat(previousOperand);
+  const current = parseFloat(currentOperand);
+  if (isNaN(prev) || isNaN(current)) return '';
+  let computation = 0;
+  switch (operation) {
+    case '+':
+      computation = prev + current;
+      break;
+    case '-':
+      computation = prev - current;
+      break;
+    case '*':
+      computation = prev * current;
+      break;
+    case '÷':
+      computation = prev / current;
+      break;
+  }
+
+  return computation.toString();
+}
+
+const INTEGER_FORMATTER = new Intl.NumberFormat('en-us', {
+  maximumFractionDigits: 0,
+});
+function formatOperand(operand: string) {
+  if (operand == null) return;
+  const [integer, decimal] = operand.split('.');
+  if (decimal == null) return INTEGER_FORMATTER.format(parseInt(integer, 10));
+  return `${INTEGER_FORMATTER.format(parseInt(integer, 10))}.${decimal}`;
 }
 
 function App() {
@@ -67,9 +125,11 @@ function App() {
     <div className={styles.gridContainer}>
       <div className={styles.output}>
         <div className={styles.previousOperand}>
-          {previousOperand} {operation}
+          {formatOperand(previousOperand)} {operation}
         </div>
-        <div className={styles.currentOperand}>{currentOperand}</div>
+        <div className={styles.currentOperand}>
+          {formatOperand(currentOperand)}
+        </div>
       </div>
       <button
         onClick={() => dispatch({ actionType: ACTIONTYPES.CLEAR })}
@@ -78,19 +138,19 @@ function App() {
         AC
       </button>
       <button>DEL</button>
-      <button>÷</button>
+      <OperationButton operation={OPERATIONS.DEVIDE} dispatch={dispatch} />
       <DigitButton digit={'1'} dispatch={dispatch} />
       <DigitButton digit={'2'} dispatch={dispatch} />
       <DigitButton digit={'3'} dispatch={dispatch} />
-      <button>*</button>
+      <OperationButton operation={OPERATIONS.MULTIPLY} dispatch={dispatch} />
       <DigitButton digit={'4'} dispatch={dispatch} />
       <DigitButton digit={'5'} dispatch={dispatch} />
       <DigitButton digit={'6'} dispatch={dispatch} />
-      <button>+</button>
+      <OperationButton operation={OPERATIONS.PLUS} dispatch={dispatch} />
       <DigitButton digit={'7'} dispatch={dispatch} />
       <DigitButton digit={'8'} dispatch={dispatch} />
       <DigitButton digit={'9'} dispatch={dispatch} />
-      <button>-</button>
+      <OperationButton operation={OPERATIONS.MINUS} dispatch={dispatch} />
       <DigitButton digit={'.'} dispatch={dispatch} />
       <DigitButton digit={'0'} dispatch={dispatch} />
       <button className={styles.spanTwo}>=</button>
